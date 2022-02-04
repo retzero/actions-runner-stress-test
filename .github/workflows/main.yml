@@ -3,7 +3,7 @@ name: Stress Test
 on:
   push:
   schedule:
-    - cron:  '25,55 * * * *'
+    - cron:  '15,35,55 * * * *'
 
 jobs:
   prepare:
