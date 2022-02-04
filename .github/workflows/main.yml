@@ -37,7 +37,7 @@ jobs:
     runs-on: "self-hosted"
     container: buildpack-deps:20.04
     strategy:
-      matrix: ${{ fromJson(needs.v2_prepare.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - uses: actions/checkout@v2
       - run: apt update
@@ -60,7 +60,7 @@ jobs:
     runs-on: "self-hosted"
     container: buildpack-deps:20.04
     strategy:
-      matrix: ${{ fromJson(needs.v2_prepare.outputs.matrix) }}
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
       - uses: CODE-Actions/checkout@v2
       - run: apt update
