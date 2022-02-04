@@ -1,0 +1,17 @@
+name: Stress Test
+
+on:
+  push:
+  schedule:
+    - cron:  '25,55 * * * *'
+
+jobs:
+  starter:
+    runs-on: [ self-hosted ]
+
+    container:
+      image: buildpack-deps:20.04
+
+    steps:
+      - name: main; check out repository code
+        uses: actions/checkout@v2
