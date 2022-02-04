@@ -49,7 +49,7 @@ jobs:
       - run: |
           ls -ARl /tmp/RESULT
         shell: bash
-      - uses: CODE-Actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           name: tmp_frontend_${{ matrix.model }}.result
           path: /tmp/RESULT
@@ -62,13 +62,13 @@ jobs:
     strategy:
       matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
     steps:
-      - uses: CODE-Actions/checkout@v2
+      - uses: actions/checkout@v2
       - run: apt update
-      - uses: CODE-Actions/download-artifact@v2
+      - uses: actions/download-artifact@v2
         with:
           path: /tmp/INBOUND
           name: tmp_frontend_${{ matrix.model }}.result
-      - uses: CODE-Actions/download-artifact@v2
+      - uses: actions/download-artifact@v2
         if: ${{ matrix.base != '' }}
         with:
           path: /tmp/INBOUND
@@ -81,7 +81,7 @@ jobs:
       - run: |
           ls -ARl /tmp/RESULT
         shell: bash
-      - uses: CODE-Actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2
         with:
           name: tmp_backend_${{ matrix.model }}.result
           path: /tmp/RESULT
