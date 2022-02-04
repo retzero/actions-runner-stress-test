@@ -1,0 +1,87 @@
+name: Stress Test 02
+
+on:
+  push:
+  schedule:
+    - cron:  '20,00 * * * *'
+
+jobs:
+  prepare:
+    runs-on: "self-hosted"
+    container: buildpack-deps:20.04
+    outputs:
+       matrix: ${{ steps.setmatrix.outputs.matrix }}
+       start_date: ${{ steps.setdate.outputs.date }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: |
+          mkdir -p /tmp/RESULT
+          cp ./issues_1652/v2_models_matrix.json /tmp/RESULT/
+      - uses: actions/upload-artifact@v2
+        with:
+          name: v2_models_matrix
+          path: /tmp/RESULT
+          retention-days: 1
+      - name: set matrix
+        id: setmatrix
+        run: |
+          JSON="`cat /tmp/RESULT/v2_models_matrix.json`"
+          echo "::set-output name=matrix::$JSON"
+      - name: main; set current date
+        id: setdate
+        run: |
+          echo "::set-output name=date::$(date +'%y%m%d%H')"
+  frontend:
+    needs: prepare
+    runs-on: "self-hosted"
+    container: buildpack-deps:20.04
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: apt update
+      - run: |
+          mkdir -p /tmp/RESULT
+          dd bs=1024 count=$(( ( RANDOM % 1024 )  + 1 )) </dev/urandom >/tmp/RESULT/${{ matrix.model }}.tvn
+          dd bs=1024 count=$(( ( RANDOM % 1024 )  + 1 )) </dev/urandom >/tmp/RESULT/${{ matrix.model }}-seq.tvn
+        shell: bash
+      - run: |
+          ls -ARl /tmp/RESULT
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tmp_frontend_${{ matrix.model }}.result
+          path: /tmp/RESULT
+          retention-days: 1
+
+  backend:
+    needs: [ prepare , frontend ]
+    runs-on: "self-hosted"
+    container: buildpack-deps:20.04
+    strategy:
+      matrix: ${{ fromJson(needs.prepare.outputs.matrix) }}
+    steps:
+      - uses: actions/checkout@v2
+      - run: apt update
+      - uses: actions/download-artifact@v2
+        with:
+          path: /tmp/INBOUND
+          name: tmp_frontend_${{ matrix.model }}.result
+      - uses: actions/download-artifact@v2
+        if: ${{ matrix.base != '' }}
+        with:
+          path: /tmp/INBOUND
+          name: tmp_frontend_${{ matrix.base }}.result
+      - run: |
+          mkdir -p /tmp/RESULT
+          dd bs=1024 count=$(( ( RANDOM % 1024 )  + 1 )) </dev/urandom >/tmp/RESULT/${{ matrix.model }}.tvn
+          dd bs=1024 count=$(( ( RANDOM % 1024 )  + 1 )) </dev/urandom >/tmp/RESULT/${{ matrix.model }}-seq.tvn
+        shell: bash
+      - run: |
+          ls -ARl /tmp/RESULT
+        shell: bash
+      - uses: actions/upload-artifact@v2
+        with:
+          name: tmp_backend_${{ matrix.model }}.result
+          path: /tmp/RESULT
+          retention-days: 1
